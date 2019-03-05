@@ -35,18 +35,17 @@ public class MjpegProxyRestController {
 	private MjpegProxy mjpegProxy;
 
 	@GetMapping("/camera-video")
-	public void getCameraVideoV2(@RequestParam("url") String url, HttpServletResponse response) throws IOException {
+	public void getCameraVideo(@RequestParam("url") String url, HttpServletResponse response) throws IOException {
 		response.setStatus(200);
 		VideoSource videoSource = mjpegProxy.getVideoSource(url);
 		Map<String, List<String>> headers = videoSource.getHeaders();
 		headers.entrySet().stream().forEach(//
 				entry -> entry.getValue().stream().forEach(//
 						value -> response.addHeader(entry.getKey(), value)));
-		OutputStream out = response.getOutputStream();
 		try {
-			readAndWrite(videoSource, out);
-		} catch (IOException e) {
-			mjpegProxy.removeVideoSource(url);
+			readAndWrite(videoSource, response.getOutputStream());
+		} finally {
+			mjpegProxy.returnVideoSource(url);
 		}
 	}
 
